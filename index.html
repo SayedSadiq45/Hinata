@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="An interactive Hinata-inspired story of quiet devotion, told through a lantern, falling petals, and a scroll-driven film.">
+<meta name="theme-color" content="#000000">
+<meta property="og:type" content="website">
+<meta property="og:title" content="New Hinata | Sayed Sadiq">
+<meta property="og:description" content="An interactive story of quiet devotion, told through a lantern, falling petals, and a scroll-driven film.">
+<title>New Hinata | Sayed Sadiq</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Yuji+Syuku&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Maru+Gothic:wght@400;500;700;900&display=swap">
+
+<style>
+/* ── tokens ─────────────────────────────────────────────
+   One committed visual world. Every source image is matted
+   on pure black, so the page ground is that same black and
+   the art has no visible box around it.                    */
+:root{
+  --ink:#000000;
+  --sumi:#121016;
+  --paper:#EFE8EA;
+  --mist:#9A8F9E;
+  --faint:#4A4351;
+
+  --hinata:#9AA4E4;
+  --naruto:#F59436;
+  --sakura:#F49BBD;
+  --dusk:#E8A24C;        /* the swing scene's low sun */
+  --leaf:#4E7A45;
+
+  --disp:"Yuji Syuku","Hiragino Mincho ProN","Yu Mincho",serif;
+  --body:"Zen Maru Gothic","Hiragino Maru Gothic ProN",ui-rounded,system-ui,sans-serif;
+  --util:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN",system-ui,sans-serif;
+
+  --gut:clamp(16px,4vw,48px);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--ink);
+  color:var(--paper);
+  font-family:var(--body);
+  font-size:16px;
+  line-height:1.8;
+  overflow-x:hidden;
+  cursor:none;
+}
+@media (hover:none){ body{cursor:auto} }
+
+.eyebrow{
+  font-family:var(--util);font-size:11px;letter-spacing:.42em;
+  text-transform:uppercase;color:var(--leaf);margin:0 0 18px;
+}
+
+/* ── loader ──────────────────────────────────────────── */
+#load{
+  position:fixed; inset:0; z-index:90;
+  background:var(--ink);
+  display:grid; place-content:center; justify-items:center; gap:22px;
+  transition:opacity .9s ease, visibility .9s;
+}
+#load.done{opacity:0; visibility:hidden}
+.leafspin{
+  width:46px;height:46px;border-radius:50% 0 50% 0;
+  background:linear-gradient(140deg,var(--leaf),#2c4a27);
+  animation:spin 2.4s cubic-bezier(.6,.05,.3,.95) infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.load-jp{font-family:var(--disp);font-size:20px;letter-spacing:.26em;color:var(--mist);margin:0}
+.bar{width:min(220px,50vw);height:1px;background:var(--faint);position:relative;overflow:hidden}
+.bar i{position:absolute;inset:0 100% 0 0;background:var(--sakura);transition:right .3s ease}
+.pct{font-family:var(--util);font-size:11px;letter-spacing:.3em;color:var(--faint);font-variant-numeric:tabular-nums;margin:0}
+
+/* ═══ 1 · the film ═══════════════════════════════════ */
+#track{position:relative;height:640vh}
+#stage{
+  position:sticky; top:env(safe-area-inset-top,0px);
+  height:100svh; width:100%; overflow:hidden;
+}
+#film{display:block;width:100%;height:100%}
+.vig{
+  position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(130% 90% at 50% 45%,transparent 38%,rgba(0,0,0,.78) 100%),
+    linear-gradient(to bottom,rgba(0,0,0,.55),transparent 22%,transparent 72%,rgba(0,0,0,.72));
+}
+
+#title{
+  position:absolute; inset:0;
+  display:flex; flex-direction:column; justify-content:center;
+  padding-inline:var(--gut); pointer-events:none;
+}
+#title h2{
+  font-family:var(--disp);
+  font-size:clamp(34px,7.4vw,92px);
+  line-height:1.08; margin:0; font-weight:400;
+  letter-spacing:.04em; text-wrap:balance;
+  text-shadow:0 2px 40px rgba(0,0,0,.95);
+}
+#title h2 em{font-style:normal;color:var(--sakura)}
+#title .sub{
+  font-family:var(--util);font-size:clamp(12px,2.4vw,15px);
+  letter-spacing:.2em;color:var(--mist);margin:20px 0 0;max-width:34ch;
+}
+.cue{
+  position:absolute; left:var(--gut); bottom:clamp(20px,5vh,44px);
+  font-family:var(--util);font-size:10px;letter-spacing:.34em;
+  text-transform:uppercase;color:var(--faint);
+  display:flex;align-items:center;gap:12px;margin:0;
+}
+.cue span{display:block;width:44px;height:1px;background:var(--faint);position:relative;overflow:hidden}
+.cue span::after{content:"";position:absolute;inset:0;background:var(--sakura);animation:sweep 2.6s ease-in-out infinite}
+@keyframes sweep{0%{transform:translateX(-100%)}60%,100%{transform:translateX(100%)}}
+
+.cap{
+  position:absolute; top:50%; transform:translateY(-50%);
+  writing-mode:vertical-rl; text-orientation:upright;
+  font-family:var(--disp); font-size:clamp(19px,2.6vw,27px);
+  letter-spacing:.2em; line-height:1.6;
+  opacity:0; transition:opacity .7s ease, transform .7s ease;
+  pointer-events:none; text-shadow:0 2px 24px #000, 0 0 60px #000;
+}
+.cap.right{right:var(--gut); transform:translateY(-50%) translateX(14px)}
+.cap.left{left:var(--gut); transform:translateY(-50%) translateX(-14px)}
+.cap.on{opacity:1; transform:translateY(-50%) translateX(0)}
+.cap small{
+  display:block; writing-mode:horizontal-tb;
+  font-family:var(--util);font-size:12px;letter-spacing:.14em;
+  color:var(--mist); margin-top:16px; max-width:20ch; line-height:1.7;
+}
+.cap.c2{color:var(--hinata)}
+.cap.c3{color:var(--paper)}
+.cap.c4{color:var(--naruto)}
+.cap.c5{color:var(--sakura)}
+
+#rail{
+  position:absolute; right:calc(var(--gut) / 2); top:50%;
+  transform:translateY(-50%);
+  display:flex; flex-direction:column; gap:14px; align-items:center;
+  pointer-events:none;
+}
+#rail b{width:5px;height:5px;border-radius:50%;background:var(--faint);
+  transition:background .4s ease, transform .4s ease}
+#rail b.on{background:var(--sakura);transform:scale(2)}
+
+/* ═══ 2 · the swing ══════════════════════════════════ */
+.swing{position:relative;height:250vh}
+.sw-stage{
+  position:sticky;top:0;height:100svh;overflow:hidden;
+  display:grid;place-items:center;
+}
+.sw-layer{position:absolute;inset:-12%;background-position:center;background-repeat:no-repeat;
+  background-size:cover;will-change:transform}
+.sw-haze{filter:blur(26px) brightness(.5);opacity:.75;transform:scale(1.25)}
+.sw-main{background-size:contain}
+.sw-grade{
+  position:absolute;inset:0;pointer-events:none;
+  background:
+    radial-gradient(120% 80% at 62% 48%,transparent 40%,rgba(0,0,0,.72) 100%),
+    linear-gradient(to bottom,rgba(0,0,0,.6),transparent 26%,transparent 66%,rgba(0,0,0,.85));
+}
+.sw-copy{position:absolute;inset:0;pointer-events:none}
+.sw-title{
+  position:absolute;left:var(--gut);right:var(--gut);top:clamp(46px,9vh,96px);
+  font-family:var(--disp);font-weight:400;
+  font-size:clamp(30px,6.4vw,74px);line-height:1.2;margin:0;
+  letter-spacing:.05em;text-wrap:balance;
+  text-shadow:0 2px 36px #000;will-change:transform;
+}
+.sw-title i{font-style:normal;color:var(--dusk)}
+.note{
+  position:absolute;max-width:30ch;will-change:transform;
+  text-shadow:0 2px 20px #000,0 0 44px #000;
+}
+.note h3{
+  font-family:var(--disp);font-weight:400;font-size:clamp(20px,3vw,30px);
+  margin:0 0 10px;letter-spacing:.1em;
+}
+.note p{font-family:var(--util);font-size:13px;line-height:1.9;color:var(--mist);margin:0}
+.note.n-naruto{left:var(--gut);bottom:clamp(60px,14vh,140px)}
+.note.n-naruto h3{color:var(--naruto)}
+.note.n-hinata{right:var(--gut);bottom:clamp(140px,26vh,250px);text-align:right}
+.note.n-hinata h3{color:var(--hinata)}
+
+/* ═══ 3 · the finale ═════════════════════════════════ */
+.finale{position:relative;height:230vh}
+.fin-stage{position:sticky;top:0;height:100svh;overflow:hidden}
+#lantern{display:block;width:100%;height:100%}
+.fin-ui{
+  position:absolute;left:var(--gut);right:var(--gut);
+  bottom:clamp(34px,8vh,78px);
+  pointer-events:none;text-align:center;
+}
+.fin-ui h2{
+  font-family:var(--disp);font-weight:400;
+  font-size:clamp(26px,5vw,52px);line-height:1.3;margin:0;
+  letter-spacing:.06em;text-shadow:0 2px 30px #000;
+  transition:color .6s ease;
+}
+.fin-ui .say{
+  font-family:var(--util);font-size:13px;letter-spacing:.16em;
+  color:var(--mist);margin:16px auto 0;max-width:46ch;min-height:3em;
+  text-shadow:0 2px 20px #000;
+}
+.hint{
+  font-family:var(--util);font-size:10px;letter-spacing:.36em;
+  text-transform:uppercase;color:var(--faint);
+  margin:26px 0 0;display:flex;gap:18px;justify-content:center;flex-wrap:wrap;
+}
+.hint b{font-weight:400;transition:color .5s ease}
+.fin-hero{
+  position:absolute;left:var(--gut);right:var(--gut);
+  top:clamp(38px,8vh,84px);
+  pointer-events:none;will-change:transform,opacity;
+}
+.fin-hero h1{
+  font-family:var(--disp);
+  font-size:clamp(42px,9vw,108px);
+  line-height:1.04;margin:0;font-weight:400;
+  letter-spacing:.04em;text-wrap:balance;
+  text-shadow:0 2px 40px rgba(0,0,0,.95);
+}
+.fin-hero h1 em{font-style:normal;color:var(--sakura)}
+.fin-hero .sub{
+  font-family:var(--util);font-size:clamp(12px,2.4vw,15px);
+  letter-spacing:.2em;color:var(--mist);margin:18px 0 0;max-width:36ch;
+  text-shadow:0 2px 20px #000;
+}
+
+/* ═══ outro ══════════════════════════════════════════ */
+.outro{
+  padding-block:clamp(90px,18vh,190px) clamp(60px,10vh,110px);
+  padding-inline:var(--gut);text-align:center;
+  border-top:1px solid #1e1b24;
+}
+.outro .big{
+  font-family:var(--disp);font-weight:400;
+  font-size:clamp(26px,5.6vw,60px);line-height:1.5;
+  margin:0 auto;max-width:18ch;letter-spacing:.06em;text-wrap:balance;
+}
+.outro .big i{font-style:normal;color:var(--sakura)}
+.outro .en{color:var(--mist);font-size:15px;margin:26px auto 0;max-width:44ch}
+.colophon{
+  margin:clamp(56px,10vh,96px) auto 0;max-width:60ch;
+  font-family:var(--util);font-size:11px;letter-spacing:.1em;
+  color:var(--faint);line-height:2;
+}
+
+/* ── pointer furniture ───────────────────────────────── */
+#cursor{
+  position:fixed;left:0;top:0;width:250px;height:250px;
+  margin:-125px 0 0 -125px;border-radius:50%;
+  background:radial-gradient(circle,rgba(244,155,189,.13),transparent 62%);
+  pointer-events:none;z-index:70;opacity:0;transition:opacity .6s;
+}
+#dot{
+  position:fixed;left:0;top:0;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;
+  border-radius:50% 0 50% 0;background:var(--sakura);
+  pointer-events:none;z-index:71;opacity:0;transition:opacity .6s;
+}
+#petals{position:fixed;inset:0;pointer-events:none;z-index:60}
+@media (hover:none){ #cursor,#dot{display:none} }
+
+@media (max-width:760px){
+  .cap{
+    writing-mode:horizontal-tb;top:auto;bottom:clamp(60px,12vh,110px);
+    left:var(--gut);right:var(--gut);transform:translateY(10px);text-align:left;
+  }
+  .cap.on{transform:translateY(0)}
+  .cap small{max-width:none}
+  #rail{display:none}
+  .sw-main{background-size:cover}
+  /* the centred lantern copy fills the width here, so the
+     scroll cue would land on top of it */
+  .cue{display:none}
+  .fin-hero h1{font-size:clamp(38px,11vw,64px)}
+  .fin-ui .say{font-size:12px;max-width:34ch}
+  .note{max-width:22ch}
+  .note.n-hinata{bottom:clamp(180px,34vh,300px)}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;animation-iteration-count:1 !important}
+  .cap{transition:opacity .2s}
+}
+</style>
+</head>
+<body>
+
+<div id="load">
+  <div class="leafspin"></div>
+  <p class="load-jp">木ノ葉</p>
+  <div class="bar"><i id="fill"></i></div>
+  <p class="pct"><span id="pct">0</span>%</p>
+</div>
+
+<!-- ═══ 1 · the lantern ════════════════════════════════ -->
+<section class="finale" id="finale">
+  <div class="fin-stage">
+    <canvas id="lantern"></canvas>
+
+    <div class="fin-hero" id="finHero">
+      <p class="eyebrow">Konohagakure · after dark</p>
+      <h1>片想いの<em>連鎖</em></h1>
+    </div>
+
+    <div class="fin-ui">
+      <h2 id="finTitle">誰に光をあてる？</h2>
+      <p class="say" id="finSay">Three of them, one lantern. Naruto is lit no matter what — move your cursor to decide who gets to be seen beside him.</p>
+      <p class="hint">
+        <b id="hintL">← Sakura &amp; Naruto</b>
+        <b id="hintR">Hinata →</b>
+      </p>
+    </div>
+
+    <p class="cue"><span></span>Scroll</p>
+  </div>
+</section>
+
+<!-- ═══ 2 · the swing ══════════════════════════════════ -->
+<section class="swing" id="swing">
+  <div class="sw-stage">
+    <div class="sw-layer sw-haze" id="swHaze"></div>
+    <div class="sw-layer sw-main" id="swMain"></div>
+    <div class="sw-grade"></div>
+
+    <div class="sw-copy">
+      <h2 class="sw-title" id="swTitle">ひとりぼっちの<i>ブランコ</i></h2>
+
+      <div class="note n-naruto" id="swN">
+        <h3>彼は気づかない</h3>
+        <p>The swing outside the academy, where he always sat alone while everyone else was collected by somebody. He got used to the quiet.</p>
+      </div>
+
+      <div class="note n-hinata" id="swH">
+        <h3>彼女は見ている</h3>
+        <p>She never once let him see her there. Watching him be lonely felt closer than being seen by him.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ 3 · the film ═══════════════════════════════════ -->
+<div id="track">
+  <div id="stage">
+    <canvas id="film"></canvas>
+    <div class="vig"></div>
+
+    <div id="title">
+      <p class="eyebrow">Chapter · under the tree</p>
+      <h2>あの日の<em>木の下</em>で</h2>
+      <p class="sub">Sixty-five stills from one evening. Keep scrolling to play it through.</p>
+    </div>
+
+    <div class="cap right c2">見つめる<small>Hinata has been standing there a while. Her heart is already saying his name.</small></div>
+    <div class="cap left  c3">気づかない<small>He never turns around. Not once.</small></div>
+    <div class="cap right c4">恋の目<small>Because his eyes are already full of someone else entirely.</small></div>
+    <div class="cap left  c5">そして<small>And she is thinking about a boy who is not thinking about her.</small></div>
+
+    <div id="rail"><b></b><b></b><b></b><b></b><b></b></div>
+  </div>
+</div>
+
+
+<canvas id="petals"></canvas>
+<div id="cursor"></div>
+<div id="dot"></div>
+
+<footer class="outro">
+  <p class="eyebrow">A fan-made experience · maintained by</p>
+  <h2 class="big">Sayed <i>Sadiq</i></h2>
+  <p class="en">A quiet tribute to the stories that stay with us.</p>
+  <nav class="colophon" aria-label="Sayed Sadiq's profiles">
+    <a href="https://www.linkedin.com/in/sayed-sadiq45/" target="_blank" rel="noopener noreferrer">LinkedIn · Sayed Sadiq</a>
+    <span aria-hidden="true"> · </span>
+    <a href="https://github.com/SayedSadiq45" target="_blank" rel="noopener noreferrer">GitHub · SayedSadiq45</a>
+  </nav>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  const N = 65, IW = 1120, IH = 630;
+  const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const fine   = matchMedia("(hover: hover) and (pointer: fine)").matches;
+  const lerp   = (a, b, t) => a + (b - a) * t;
+  const clamp01 = v => v < 0 ? 0 : v > 1 ? 1 : v;
+
+  /* ── shared pointer ────────────────────────────────── */
+  const ptr = { x:.5, y:.5, sx:.5, sy:.5, rx:innerWidth/2, ry:innerHeight/2, moved:0 };
+  const cur = document.getElementById("cursor"), dot = document.getElementById("dot");
+  addEventListener("pointermove", e => {
+    ptr.x = e.clientX / innerWidth; ptr.y = e.clientY / innerHeight;
+    ptr.rx = e.clientX; ptr.ry = e.clientY; ptr.moved = performance.now();
+    if (fine) { cur.style.opacity = 1; dot.style.opacity = 1; }
+  }, { passive:true });
+
+  /* ══ preload ═══════════════════════════════════════ */
+  const imgs = [], fill = document.getElementById("fill"),
+        pctEl = document.getElementById("pct"), loadEl = document.getElementById("load");
+  const swingImg = new Image(), trioImg = new Image();
+  const TOTAL = N + 2;
+  let ready = 0, stills = 0, framesIn = 0, revealed = false;
+
+  /* the film is the last section now, so it only has to be far
+     enough ahead to be ready when you get there — the two stills
+     are what the opening actually needs */
+  function reveal(){
+    if (revealed || stills < 2 || framesIn < 14) return;
+    revealed = true;
+    loadEl.classList.add("done");
+  }
+  function tick(){
+    ready++;
+    const p = ready / TOTAL;
+    fill.style.right = (100 - p * 100) + "%";
+    pctEl.textContent = Math.round(p * 100);
+    reveal();
+  }
+  function tickFrame(){ framesIn++; tick(); }
+  function tickStill(){ stills++; tick(); }
+
+  for (let i = 0; i < N; i++) {
+    const im = new Image();
+    im.onload = im.onerror = tickFrame;
+    im.src = "frames/f" + String(i + 1).padStart(3, "0") + ".webp";
+    imgs.push(im);
+  }
+  swingImg.onload = swingImg.onerror = tickStill; swingImg.src = "frames/swing.webp";
+  trioImg.onerror = tickStill;
+  trioImg.onload  = function(){ buildLantern(); tickStill(); };
+  trioImg.src = "frames/trio.webp";
+  document.getElementById("swHaze").style.backgroundImage = "url(frames/swing.webp)";
+  document.getElementById("swMain").style.backgroundImage = "url(frames/swing.webp)";
+
+  /* ══ 1 · film ══════════════════════════════════════ */
+  const cv = document.getElementById("film"), cx = cv.getContext("2d", { alpha:false });
+  let cw = 0, ch = 0;
+  function sizeFilm(){
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    cw = cv.clientWidth; ch = cv.clientHeight;
+    cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr);
+    cx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  const track = document.getElementById("track");
+  let prog = 0;
+  const caps = [...document.querySelectorAll(".cap")];
+  const dots = [...document.querySelectorAll("#rail b")];
+  const bounds = [14, 30, 42, 57, 65];
+  let chapter = -1;
+  function setChapter(f){
+    let c = 0; while (c < 4 && f > bounds[c]) c++;
+    if (c === chapter) return;
+    chapter = c;
+    caps.forEach((el, i) => el.classList.toggle("on", i === c - 1));
+    dots.forEach((el, i) => el.classList.toggle("on", i === c));
+  }
+
+  let idx = 0;
+  const titleEl = document.getElementById("title");
+
+  function paintFilm(){
+    const r = track.getBoundingClientRect();
+    const span = track.offsetHeight - innerHeight;
+    prog = span > 0 ? clamp01(-r.top / span) : 0;
+    if (r.bottom < -200 || r.top > innerHeight + 200) return;   /* off screen */
+    if (!cw) return;
+
+    const target = prog * (N - 1);
+    idx = reduce ? target : lerp(idx, target, .14);
+    if (Math.abs(target - idx) < .002) idx = target;
+
+    /* cover-fit with a little push past the edges, so the shot
+       fills the frame and the parallax has room to move into */
+    const px = reduce ? 0 : ptr.sx - .5, py = reduce ? 0 : ptr.sy - .5;
+    const scale = Math.max(cw / IW, ch / IH) * 1.05;
+    const dw = IW * scale, dh = IH * scale;
+    const dx = (cw - dw) / 2 - px * 22, dy = (ch - dh) / 2 - py * 16;
+
+    cx.fillStyle = "#000"; cx.fillRect(0, 0, cw, ch);
+
+    /* cross-dissolve neighbouring stills so the scrub never stutters */
+    const lo = Math.floor(idx), hi = Math.min(N - 1, lo + 1), f = idx - lo;
+    const a = imgs[lo], b = imgs[hi];
+    if (a && a.complete && a.naturalWidth) { cx.globalAlpha = 1; cx.drawImage(a, dx, dy, dw, dh); }
+    if (f > .01 && b && b.complete && b.naturalWidth) { cx.globalAlpha = f; cx.drawImage(b, dx, dy, dw, dh); }
+    cx.globalAlpha = 1;
+
+    setChapter(Math.round(idx) + 1);
+
+    const t = Math.max(0, 1 - prog / .055);
+    titleEl.style.opacity = t;
+    titleEl.style.transform = "translateY(" + (1 - t) * -26 + "px)";
+  }
+
+  /* ══ 2 · swing parallax ════════════════════════════ */
+  const swing = document.getElementById("swing"),
+        swHaze = document.getElementById("swHaze"), swMain = document.getElementById("swMain"),
+        swTitle = document.getElementById("swTitle"),
+        swN = document.getElementById("swN"), swH = document.getElementById("swH");
+
+  function paintSwing(){
+    const r = swing.getBoundingClientRect();
+    if (r.bottom < 0 || r.top > innerHeight) return;
+    /* -1 entering, 0 centred, 1 leaving */
+    const span = swing.offsetHeight - innerHeight;
+    const p = span > 0 ? clamp01(-r.top / span) : 0;
+    const c = (p - .5) * 2;
+    const px = reduce ? 0 : ptr.sx - .5, py = reduce ? 0 : ptr.sy - .5;
+
+    /* each layer runs at its own rate — the art drifts slowest,
+       the type furthest, so depth comes from the speed gap */
+    swHaze.style.transform  = "scale(1.25) translate3d(" + (px * -26) + "px," + (c * -22 + py * -12) + "px,0)";
+    swMain.style.transform  = "scale(1.04) translate3d(" + (px * 22) + "px," + (c * -62 + py * 14) + "px,0)";
+    swTitle.style.transform = "translate3d(" + (px * 30) + "px," + (c * -150) + "px,0)";
+    swN.style.transform     = "translate3d(" + (px * 46) + "px," + (c * -240) + "px,0)";
+    swH.style.transform     = "translate3d(" + (px * -40) + "px," + (c * -330) + "px,0)";
+
+    const fade = clamp01(1 - Math.abs(c) * 1.45);
+    swTitle.style.opacity = clamp01(1 - Math.abs(c + .35) * 1.7);
+    swN.style.opacity = fade;
+    swH.style.opacity = clamp01(1 - Math.abs(c - .18) * 1.6);
+  }
+
+  /* ══ 3 · finale — the lantern ══════════════════════ */
+  const lan = document.getElementById("lantern"), lx = lan.getContext("2d", { alpha:false });
+  const finale = document.getElementById("finale");
+  const finTitle = document.getElementById("finTitle"), finSay = document.getElementById("finSay");
+  const hintL = document.getElementById("hintL"), hintR = document.getElementById("hintR");
+  const finHero = document.getElementById("finHero"), cueEl = document.querySelector(".cue");
+
+  /* the page title clears out as you leave the opening scene */
+  function paintHero(){
+    const r = finale.getBoundingClientRect();
+    const span = finale.offsetHeight - innerHeight;
+    const p = span > 0 ? clamp01(-r.top / span) : 0;
+    const t = Math.max(0, 1 - p / .3);
+    finHero.style.opacity = t;
+    finHero.style.transform = "translateY(" + (1 - t) * -30 + "px)";
+    cueEl.style.opacity = t;
+  }
+
+  /* anchors in image space (0-1) — where each face actually sits */
+  const A_NARUTO = { x:.42, y:.48 }, A_SAKURA = { x:.17, y:.52 }, A_HINATA = { x:.87, y:.55 };
+
+  let dark = null, lit = null, maskC = null, maskX = null,
+      tmpC = null, tmpX = null, bloomC = null, bloomX = null, grain = null, grainPat = null;
+  let lw = 0, lh = 0, fit = null, lanOn = false;
+  const trail = [];
+  let side = 0, sideS = 0, glow = 0;
+
+  function makeGrain(){
+    const g = document.createElement("canvas"); g.width = g.height = 128;
+    const gx = g.getContext("2d"), d = gx.createImageData(128, 128);
+    for (let i = 0; i < d.data.length; i += 4) {
+      const v = 120 + Math.random() * 135;
+      d.data[i] = d.data[i+1] = d.data[i+2] = v; d.data[i+3] = 255;
+    }
+    gx.putImageData(d, 0, 0);
+    return g;
+  }
+
+  function buildLantern(){
+    if (!trioImg.naturalWidth) return;
+    const w = trioImg.naturalWidth, h = trioImg.naturalHeight;
+    /* the darkened pass is built once, not per frame */
+    dark = document.createElement("canvas"); dark.width = w; dark.height = h;
+    const dxx = dark.getContext("2d");
+    const hasFilter = typeof dxx.filter === "string";
+    /* everyone but Naruto is genuinely in the dark — the unlit pass
+       has to sit at black, not at a dim version of the picture */
+    if (hasFilter) dxx.filter = "brightness(.04) saturate(.18) contrast(1.1)";
+    dxx.drawImage(trioImg, 0, 0);
+    if (hasFilter) dxx.filter = "none";
+    /* without ctx.filter the flat wash has to do all the darkening */
+    dxx.fillStyle = hasFilter ? "rgba(2,1,4,.74)" : "rgba(3,2,6,.96)";
+    dxx.fillRect(0, 0, w, h);
+
+    lit = document.createElement("canvas"); lit.width = w; lit.height = h;
+    const lxx = lit.getContext("2d");
+    if (hasFilter) lxx.filter = "brightness(1.12) saturate(1.14)";
+    lxx.drawImage(trioImg, 0, 0);
+
+    grain = makeGrain();
+    sizeLantern();
+    grainPat = lx.createPattern(grain, "repeat");
+  }
+
+  function sizeLantern(){
+    if (!dark) return;
+    const dpr = Math.min(devicePixelRatio || 1, 1.5);
+    lw = Math.round(lan.clientWidth * dpr); lh = Math.round(lan.clientHeight * dpr);
+    if (!lw || !lh) return;
+    lan.width = lw; lan.height = lh;
+
+    const s = Math.max(lw / dark.width, lh / dark.height);      /* cover */
+    const dw = dark.width * s, dh = dark.height * s;
+    fit = { x:(lw - dw) / 2, y:(lh - dh) / 2, w:dw, h:dh };
+
+    for (const c of [maskC, tmpC]) if (c) { c.width = lw; c.height = lh; }
+    if (!maskC) { maskC = document.createElement("canvas"); maskC.width = lw; maskC.height = lh; maskX = maskC.getContext("2d"); }
+    if (!tmpC)  { tmpC  = document.createElement("canvas"); tmpC.width  = lw; tmpC.height  = lh; tmpX  = tmpC.getContext("2d"); }
+    if (!bloomC){ bloomC = document.createElement("canvas"); bloomX = bloomC.getContext("2d"); }
+    bloomC.width = Math.max(1, lw >> 3); bloomC.height = Math.max(1, lh >> 3);
+  }
+
+  /* image-space anchor → canvas pixels */
+  const at = a => ({ x: fit.x + a.x * fit.w, y: fit.y + a.y * fit.h });
+
+  /* tight falloff — a long tail is what leaks light onto the
+     person who is meant to still be hidden */
+  function blob(g, x, y, r, a){
+    if (a <= .002 || r <= 0) return;
+    const rg = g.createRadialGradient(x, y, 0, x, y, r);
+    rg.addColorStop(0,   "rgba(255,255,255," + a + ")");
+    rg.addColorStop(.38, "rgba(255,255,255," + a * .52 + ")");
+    rg.addColorStop(.72, "rgba(255,255,255," + a * .10 + ")");
+    rg.addColorStop(1,   "rgba(255,255,255,0)");
+    g.fillStyle = rg;
+    g.fillRect(x - r, y - r, r * 2, r * 2);
+  }
+
+  function paintLantern(now){
+    if (!dark || !fit || !lanOn) return;
+    const rect = lan.getBoundingClientRect();
+    const dpr = lw / Math.max(1, lan.clientWidth);
+
+    /* where the light is, with inertia — the ghost lags the cursor */
+    const inside = ptr.ry > rect.top - 80 && ptr.ry < rect.bottom + 80;
+    let tx, ty;
+    if (fine && inside) {
+      tx = (ptr.rx - rect.left) * dpr;
+      ty = (ptr.ry - rect.top) * dpr;
+    } else {
+      /* no pointer: drift the lantern between the two of them */
+      const d = Math.sin(now / 3600);
+      tx = (.5 + d * .36) * lw; ty = (.52 + Math.sin(now / 5200) * .06) * lh;
+    }
+    const last = trail[trail.length - 1];
+    const nx = last ? lerp(last.x, tx, .5) : tx;
+    const ny = last ? lerp(last.y, ty, .5) : ty;
+    trail.push({ x:nx, y:ny });
+    while (trail.length > 50) trail.shift();
+
+    /* fade the roaming light out when the cursor rests */
+    const idleFor = (fine && inside) ? now - ptr.moved : 0;
+    const want = idleFor < 1000 ? 1 : clamp01(1 - (idleFor - 1000) / 1500);
+    glow = lerp(glow, want, .08);
+
+    /* which side of the frame the light is on decides who is seen */
+    const rel = nx / lw;
+    const target = rel < .46 ? -1 : rel > .58 ? 1 : 0;
+    side = lerp(side, target, .06);
+    sideS = Math.abs(side);
+
+    /* ── mask ── */
+    maskX.setTransform(1,0,0,1,0,0);
+    maskX.clearRect(0, 0, lw, lh);
+    maskX.globalCompositeOperation = "lighter";
+
+    const R = Math.min(lw, lh);
+    /* Naruto is never in the dark */
+    const n = at(A_NARUTO);
+    blob(maskX, n.x, n.y, R * .40, .95);
+
+    /* whichever side the light leans toward gets its own pool */
+    const leftness = clamp01(-side), rightness = clamp01(side);
+    if (leftness > .01) {
+      const s = at(A_SAKURA);
+      blob(maskX, s.x, s.y, R * .46, leftness * glow * .95);
+      blob(maskX, n.x, n.y, R * .44, leftness * glow * .5);   /* the pair together */
+    }
+    if (rightness > .01) {
+      const hh = at(A_HINATA);
+      blob(maskX, hh.x, hh.y, R * .42, rightness * glow * .95);
+    }
+
+    /* the ghost trail itself */
+    for (let i = 0; i < trail.length; i++) {
+      const t = i / trail.length, p = trail[i];
+      blob(maskX, p.x, p.y, R * (.05 + t * .12), t * t * .5 * glow);
+    }
+    maskX.globalCompositeOperation = "source-over";
+
+    /* ── composite ── */
+    tmpX.setTransform(1,0,0,1,0,0);
+    tmpX.globalCompositeOperation = "source-over";
+    tmpX.clearRect(0, 0, lw, lh);
+    tmpX.drawImage(lit, fit.x, fit.y, fit.w, fit.h);
+    tmpX.globalCompositeOperation = "destination-in";
+    tmpX.drawImage(maskC, 0, 0);
+    tmpX.globalCompositeOperation = "source-over";
+
+    lx.setTransform(1,0,0,1,0,0);
+    lx.globalCompositeOperation = "source-over";
+    lx.globalAlpha = 1;
+    lx.drawImage(dark, fit.x, fit.y, fit.w, fit.h);
+    lx.drawImage(tmpC, 0, 0);
+
+    /* bloom: downsample, throw it back up additively */
+    bloomX.clearRect(0, 0, bloomC.width, bloomC.height);
+    bloomX.drawImage(tmpC, 0, 0, bloomC.width, bloomC.height);
+    lx.globalCompositeOperation = "lighter";
+    lx.globalAlpha = .34;
+    lx.drawImage(bloomC, -lw * .01, -lh * .01, lw * 1.02, lh * 1.02);
+
+    /* grain */
+    if (grainPat) {
+      lx.globalCompositeOperation = "overlay";
+      lx.globalAlpha = .05;
+      lx.fillStyle = grainPat;
+      lx.fillRect(0, 0, lw, lh);
+    }
+    lx.globalCompositeOperation = "source-over";
+    lx.globalAlpha = 1;
+
+    setSide(target, glow);
+  }
+
+  let shown = 99;
+  function setSide(t, g){
+    const key = g < .3 ? 0 : t;
+    if (key === shown) return;
+    shown = key;
+    if (key === -1) {
+      finTitle.textContent = "「サクラちゃん！」";
+      finTitle.style.color = "var(--sakura)";
+      finSay.textContent = "He leans her way without noticing he does it. She is laughing at something he said. This is the version of the evening he will remember.";
+      hintL.style.color = "var(--sakura)"; hintR.style.color = "";
+    } else if (key === 1) {
+      finTitle.textContent = "「ナルトくん…」";
+      finTitle.style.color = "var(--hinata)";
+      finSay.textContent = "She sat a little apart so nobody would ask. From here she can watch him be happy about somebody else, which is its own kind of company.";
+      hintR.style.color = "var(--hinata)"; hintL.style.color = "";
+    } else {
+      finTitle.textContent = "誰に光をあてる？";
+      finTitle.style.color = "";
+      finSay.textContent = "Three of them, one lantern. Naruto is lit no matter what — move your cursor to decide who gets to be seen beside him.";
+      hintL.style.color = ""; hintR.style.color = "";
+    }
+  }
+
+  /* only run the lantern while it is on screen */
+  if ("IntersectionObserver" in window) {
+    new IntersectionObserver(es => { lanOn = es[0].isIntersecting; }, { rootMargin:"120px" })
+      .observe(finale);
+  } else { lanOn = true; }
+
+  /* ══ petals ════════════════════════════════════════ */
+  const pc = document.getElementById("petals"), pctx = pc.getContext("2d");
+  let pw = 0, ph = 0, petals = [];
+  function sizePetals(){
+    const dpr = Math.min(devicePixelRatio || 1, 2);
+    pw = innerWidth; ph = innerHeight;
+    pc.width = pw * dpr; pc.height = ph * dpr;
+    pctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    petals = Array.from({ length: pw < 700 ? 16 : 34 }, () => seed(true));
+  }
+  function seed(anywhere){
+    return {
+      x: Math.random() * pw, y: anywhere ? Math.random() * ph : -20,
+      r: 3 + Math.random() * 5,
+      vy: .22 + Math.random() * .55, vx: -.18 + Math.random() * .36,
+      a: Math.random() * Math.PI * 2, va: (-.5 + Math.random()) * .02,
+      o: .2 + Math.random() * .45
+    };
+  }
+  function petalStep(){
+    pctx.clearRect(0, 0, pw, ph);
+    for (const p of petals) {
+      /* bend away from the pointer, like air being pushed */
+      const ddx = p.x - ptr.rx, ddy = p.y - ptr.ry, d2 = ddx * ddx + ddy * ddy;
+      if (d2 < 24000 && d2 > 1) {
+        const push = (1 - d2 / 24000) * 1.9 / Math.sqrt(d2);
+        p.x += ddx * push; p.y += ddy * push;
+      }
+      p.x += p.vx + Math.sin(p.y * .012) * .35;
+      p.y += p.vy; p.a += p.va;
+      if (p.y > ph + 20 || p.x < -30 || p.x > pw + 30) Object.assign(p, seed(false));
+      pctx.save();
+      pctx.translate(p.x, p.y); pctx.rotate(p.a);
+      pctx.fillStyle = "rgba(244,155,189," + p.o + ")";
+      pctx.beginPath(); pctx.ellipse(0, 0, p.r, p.r * .58, 0, 0, Math.PI * 2); pctx.fill();
+      pctx.restore();
+    }
+  }
+
+  /* ══ loop ══════════════════════════════════════════ */
+  let cxp = innerWidth / 2, cyp = innerHeight / 2;
+  function loop(now){
+    ptr.sx = lerp(ptr.sx, ptr.x, .07);
+    ptr.sy = lerp(ptr.sy, ptr.y, .07);
+    paintHero();
+    paintLantern(now);
+    paintSwing();
+    paintFilm();
+    if (!reduce) petalStep();
+    if (fine) {
+      cxp = lerp(cxp, ptr.rx, .12); cyp = lerp(cyp, ptr.ry, .12);
+      cur.style.transform = "translate(" + cxp + "px," + cyp + "px)";
+      dot.style.transform = "translate(" + ptr.rx + "px," + ptr.ry + "px)";
+    }
+    requestAnimationFrame(loop);
+  }
+
+  function sizeAll(){ sizeFilm(); sizePetals(); sizeLantern(); }
+  addEventListener("resize", sizeAll, { passive:true });
+  sizeAll();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
